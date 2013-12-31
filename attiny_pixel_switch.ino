@@ -11,7 +11,7 @@
 #define NUM_LEDS 15
 #define DATA_PIN 4
 #define BTN_PIN 0
-#define BTN_DELAY 50
+#define BTN_DELAY 80
 #define NUM_PATTERNS 5
 #define CTR_THRESH 16
 
@@ -27,7 +27,7 @@ uint32_t setColor=0;
 unsigned long mark;
 
 // Start Strip
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
     pinMode(BTN_PIN, INPUT);     
@@ -37,11 +37,7 @@ void setup() {
 
 void loop() {
     // if button pressed, advance, set mark
-    if(chkBtn(digitalRead(BTN_PIN))) {
-       j = 0;
-       mark = millis();
-       pattern++;
-    }
+    chkBtn(digitalRead(BTN_PIN));
    
     // if pattern greater than #pattern reset
     if (pattern > NUM_PATTERNS) { pattern = 1; }
@@ -57,23 +53,28 @@ void loop() {
 void pickPattern(uint8_t var) {
       switch (var) {
         case 1:
-          bounceInOut(4,counter,15);
-          counter++;
+          // color wipe
+          colorWipe(strip.Color(random(255), random(255), random(255)),50);
         break;
         case 2:
+          // show rainbow
           rainbowCycle(10);
         break;
         case 3:
+          // rainbow firefly, 1px at random
           colorFirefly(100);
           counter++;
         break;
         case 4:
+          // rainbow solid
           rainbow(10);
           counter++;
         break;
         case 5:
-          colorWipe(60);
-          counter++;
+           // bounce in and out
+           // tail len, counter, delay
+           bounceInOut(4,counter,15);
+           counter++;
         break;
       }
       if (direction == 1) { j++;  } else {  j--; }
@@ -82,10 +83,12 @@ void pickPattern(uint8_t var) {
 /* check button state */
 boolean chkBtn(int buttonState) {
    if (buttonState == HIGH && (millis() - mark) > BTN_DELAY) {
+       j = 0;
+       mark = millis();
+       pattern++;
        return true;
-    } else {
-       return false; 
-    }
+    } 
+    else { return false; }
 }
 
 void colorFirefly(int wait) {
@@ -111,16 +114,13 @@ void colorFirefly(int wait) {
 // Fill the dots one after the other with a color
 // Modified from Neopixel sketch to break on button press
 
-void colorWipe(uint8_t wait) {
-    if(counter < strip.numPixels()) {
-        strip.setPixelColor(counter, setColor);
-        strip.show();
-        delay(wait);
-    } else {
-      counter=-1;
-      // define random color
-      setColor=strip.Color(random(255), random(255), random(255));
-    }
+void colorWipe(uint32_t c, uint8_t wait) {
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+      if(chkBtn(digitalRead(BTN_PIN))) { break; }
+      strip.setPixelColor(i, c);
+      strip.show();
+      delay(wait);
+  }
 }
 
 // fast version 
