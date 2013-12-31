@@ -12,7 +12,7 @@
 #define DATA_PIN 4
 #define BTN_PIN 0
 #define BTN_DELAY 80
-#define NUM_PATTERNS 5
+#define NUM_PATTERNS 9
 #define CTR_THRESH 16
 
 // Vars
@@ -23,6 +23,7 @@ uint8_t lastPix=0;
 uint8_t myPix=0;
 uint8_t direction=1;
 uint8_t counter=0;
+uint8_t colors[3];
 uint32_t setColor=0;
 unsigned long mark;
 
@@ -53,29 +54,47 @@ void loop() {
 void pickPattern(uint8_t var) {
       switch (var) {
         case 1:
-          // color wipe
-          colorWipe(strip.Color(random(255), random(255), random(255)),50);
+          // scanner, color and delay
+          scanner(strip.Color(random(255), random(255), random(255)),50);
         break;
         case 2:
+          // color wipe random
+          colorWipe(strip.Color(random(255), random(255), random(255)),50);
+        break;
+        case 3:
           // show rainbow
           rainbowCycle(10);
         break;
-        case 3:
+        case 4:
           // rainbow firefly, 1px at random
           colorFirefly(100);
           counter++;
         break;
-        case 4:
+        case 5:
           // rainbow solid
           rainbow(10);
           counter++;
         break;
-        case 5:
+        case 6:
            // bounce in and out
            // tail len, counter, delay
-           bounceInOut(4,counter,15);
+           bounceInOut(4,counter,20);
            counter++;
         break;
+        case 7:
+           // color wipe from center
+           colorWipeCenter(strip.Color(255,0,0),100);
+           colorWipeCenter(strip.Color(255,64,0),100);
+        break;
+        case 8:
+           // solid color
+           colorFast(strip.Color(255,255,255),0);
+        break;
+        case 9:
+          // fade even or odd
+          // 0-359 Hue value, even/odd, delay
+          fadeEveOdd(200,0,20);
+          fadeEveOdd(300,1,20);
       }
       if (direction == 1) { j++;  } else {  j--; }
 }
@@ -94,7 +113,6 @@ boolean chkBtn(int buttonState) {
 void colorFirefly(int wait) {
         if(myPix != lastPix) {
           if(counter<CTR_THRESH) {
-            int colors[3];
             float colorV = sin((6.28/30)*(float)(counter)) *255;
             HSVtoRGB((359/CTR_THRESH)*counter, 255, colorV, colors);
             strip.setPixelColor(myPix, colors[0], colors[1], colors[2]);
@@ -118,6 +136,19 @@ void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       if(chkBtn(digitalRead(BTN_PIN))) { break; }
       strip.setPixelColor(i, c);
+      strip.show();
+      delay(wait);
+  }
+}
+
+// color wipe from center
+void colorWipeCenter(uint32_t c, uint8_t wait) {
+  uint8_t mid=strip.numPixels()/2;
+  strip.setPixelColor(mid,c);
+  for(uint16_t i=0; i<=strip.numPixels()/2; i++) {
+      if(chkBtn(digitalRead(BTN_PIN))) { break; }
+      strip.setPixelColor(mid+i, c);
+      strip.setPixelColor(mid-i, c);
       strip.show();
       delay(wait);
   }
@@ -157,6 +188,26 @@ void rainbow(uint8_t wait) {
     // }
 }
 
+// scanner
+
+void scanner(uint32_t c,uint8_t wait) {
+        for(int i=0; i< strip.numPixels(); i++) {
+            if(chkBtn(digitalRead(BTN_PIN))) { break; }
+
+            colorFast(0,0);
+            strip.setPixelColor(i,c);
+            strip.show();
+            delay(wait);
+        }
+        for(int i=strip.numPixels(); i>0; i--) {
+           if(chkBtn(digitalRead(BTN_PIN))) { break; }
+            colorFast(0,0);
+            strip.setPixelColor(i,c);
+            strip.show();
+            delay(wait);
+        }    
+}
+
 // larson scanner to midpoint
 void bounceInOut(uint8_t num, uint8_t start,uint8_t wait) {
   colorFast(0,0);
@@ -173,6 +224,42 @@ void bounceInOut(uint8_t num, uint8_t start,uint8_t wait) {
   if(counter > strip.numPixels()) { counter=0; }
 }
 
+void fadeEveOdd(int c1,byte rem,uint8_t wait) {
+              for(int j=0; j < CTR_THRESH; j++) {
+                      for(int i=0; i< strip.numPixels(); i++) {
+                        if(i % 2== rem) {
+                           HSVtoRGB(c1,255,(255/CTR_THRESH)*j,colors);
+                           strip.setPixelColor(i,colors[0],colors[1],colors[2]);
+                         }
+                      }           
+                      if(chkBtn(digitalRead(BTN_PIN))) { break; }
+                      strip.show();
+                      delay(wait);
+                }
+                for(int j=CTR_THRESH; j >= 0; j--) {
+                      for(int i=0; i< strip.numPixels(); i++) {
+                        if(i % 2== rem) {
+                           HSVtoRGB(c1,255,(255/CTR_THRESH)*j,colors);
+                           strip.setPixelColor(i,colors[0],colors[1],colors[2]);
+                         }
+                      }             
+                     if(chkBtn(digitalRead(BTN_PIN))) { break; }
+                      strip.show();
+                      delay(wait);
+                } 
+}
+
+// twinkle random number of pixels
+void twinkleRand(int num,uint32_t c,uint32_t bg,int wait) {
+	// set background
+	 colorFast(bg,0);
+	 // for each num
+	 for (int i=0; i<num; i++) {
+	   strip.setPixelColor(random(strip.numPixels()),c);
+	 }
+	strip.show();
+	delay(wait);
+}
 
 // helpers 
 
@@ -192,7 +279,7 @@ uint32_t Wheel(byte WheelPos) {
 // HSV to RGB colors
 // hue: 0-359, sat: 0-255, val (lightness): 0-255
 // adapted from http://funkboxing.com/wordpress/?p=1366
-void HSVtoRGB(int hue, int sat, int val, int * colors) {
+void HSVtoRGB(int hue, int sat, int val, uint8_t * colors) {
     int r, g, b, base;
     if (sat == 0) { // Achromatic color (gray).
         colors[0] = val;
