@@ -12,10 +12,10 @@
 #define DATA_PIN 4
 #define BTN_PIN 0
 #define BTN_DELAY 80
-#define NUM_PATTERNS 9
+#define NUM_PATTERNS 10
 #define CTR_THRESH 16
 
-// Vars
+// Init Vars
 uint8_t j = 0;
 uint8_t pattern=1;
 uint8_t buttonState=0;
@@ -45,9 +45,13 @@ void loop() {
     
     // choose a pattern
     pickPattern(pattern);
+
     // set direction
+    if (direction == 1) { j++;  } else {  j--; }
+
     if (j > 254) { direction = 0; }
     if (j < 1) { direction = 1; }   
+	
 }
 
 /* pick a pattern */
@@ -62,12 +66,13 @@ void pickPattern(uint8_t var) {
           colorWipe(strip.Color(random(255), random(255), random(255)),50);
         break;
         case 3:
-          // show rainbow
-          rainbowCycle(10);
+          // color wave - HSV
+          // low (0-359), high (0-359),rate,extra delay
+          wavey(200,240,0.06,0);
         break;
         case 4:
           // rainbow firefly, 1px at random
-          colorFirefly(100);
+          colorFirefly(60);
           counter++;
         break;
         case 5:
@@ -95,8 +100,12 @@ void pickPattern(uint8_t var) {
           // 0-359 Hue value, even/odd, delay
           fadeEveOdd(200,0,20);
           fadeEveOdd(300,1,20);
+        break;
+        case 10:
+          // show rainbow
+          rainbowCycle(10);
+         break; 
       }
-      if (direction == 1) { j++;  } else {  j--; }
 }
 
 /* check button state */
@@ -208,7 +217,7 @@ void scanner(uint32_t c,uint8_t wait) {
         }    
 }
 
-// larson scanner to midpoint
+// scanner to midpoint
 void bounceInOut(uint8_t num, uint8_t start,uint8_t wait) {
   colorFast(0,0);
   uint8_t color=200;
@@ -259,6 +268,23 @@ void twinkleRand(int num,uint32_t c,uint32_t bg,int wait) {
 	 }
 	strip.show();
 	delay(wait);
+}
+
+// sine wave, low (0-359),high (0-359), rate of change, wait
+void wavey(int low,int high,float rt,uint8_t wait) {
+  float in,out;
+  int diff=high-low;
+  int step = diff/strip.numPixels();
+  for (in = 0; in < 6.283; in = in + rt) {
+       for(int i=0; i< strip.numPixels(); i++) {
+           out=sin(in+i*(6.283/strip.numPixels())) * diff + low;
+           HSVtoRGB(out,255,255,colors);
+           strip.setPixelColor(i,colors[0],colors[1],colors[2]);
+       }
+           strip.show();
+           delay(wait);
+           if(chkBtn(digitalRead(BTN_PIN))) { break; }
+  }
 }
 
 // helpers 
