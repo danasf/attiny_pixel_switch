@@ -58,16 +58,18 @@ void loop() {
 void pickPattern(uint8_t var) {
       switch (var) {
         case 1:
-          // scanner, color and delay
-          scanner(strip.Color(random(255), random(255), random(255)),50);
+          // scanner, color and delay - RGB
+          scanner(strip.Color(255,0,0),50);
+          scanner(strip.Color(200,0,100),50);
+          scanner(strip.Color(64,0,200),50);
         break;
         case 2:
-          // color wipe random
+          // color wipe random RGB
           colorWipe(strip.Color(random(255), random(255), random(255)),50);
         break;
         case 3:
-          // color wave - HSV
-          // low (0-359), high (0-359),rate,extra delay
+          // color wave - Hue/Sat/Bright
+          // hue low (0-359), high (0-359),rate,extra delay
           wavey(200,240,0.06,0);
         break;
         case 4:
