@@ -4,7 +4,7 @@
  WS2811/Neopixel pattern switcher for ATtiny85 (and Arduino)
  Requires Adafruit NeoPixel And CapacitiveSensor
  WS2811 Signal, Digital Pin 4
- Capicitive Touch, Digital Pin 0,1, 1M Ohm + resistor on 0
+ Capacitive Touch. Digital Pins 0 & 1, 1M+ Ohm resistor on 0
  GPL v3
 */
 
