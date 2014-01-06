@@ -11,7 +11,7 @@
 #define NUM_LEDS 15
 #define DATA_PIN 4
 #define BTN_PIN 0
-#define BTN_DELAY 80
+#define BTN_DELAY 250
 #define NUM_PATTERNS 10
 #define CTR_THRESH 16
 
@@ -282,6 +282,24 @@ void wavey(int low,int high,float rt,uint8_t wait) {
            out=sin(in+i*(6.283/strip.numPixels())) * diff + low;
            HSVtoRGB(out,255,255,colors);
            strip.setPixelColor(i,colors[0],colors[1],colors[2]);
+       }
+           strip.show();
+           delay(wait);
+           if(chkBtn(digitalRead(BTN_PIN))) { break; }
+  }
+}
+
+// sine wave, intensity
+void wavey(float rt,uint8_t wait) {
+  float in,out;
+  int diff=high-low;
+  int step = diff/strip.numPixels();
+  for (in = 0; in < 6.283; in = in + rt) {
+       for(int i=0; i< strip.numPixels(); i++) {
+         // sine wave, 3 offset waves make a rainbow!
+        float level = sin(i+in) * 127 + 128;
+        // set color level 
+        strip.setPixelColor(i,(int)level,0,0);
        }
            strip.show();
            delay(wait);
