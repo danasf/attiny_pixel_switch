@@ -290,14 +290,12 @@ void wavey(int low,int high,float rt,uint8_t wait) {
 }
 
 // sine wave, intensity
-void wavey(float rt,uint8_t wait) {
-  float in,out;
-  int diff=high-low;
-  int step = diff/strip.numPixels();
+void waveIntensity(float rt,uint8_t wait) {
+  float in,level;
   for (in = 0; in < 6.283; in = in + rt) {
        for(int i=0; i< strip.numPixels(); i++) {
          // sine wave, 3 offset waves make a rainbow!
-        float level = sin(i+in) * 127 + 128;
+        level = sin(i+in) * 127 + 128;
         // set color level 
         strip.setPixelColor(i,(int)level,0,0);
        }
